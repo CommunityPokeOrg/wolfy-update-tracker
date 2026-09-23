@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-09-23T16:54:40+00:00",
+  "generated_at": "2026-09-23T17:09:01.781451+00:00",
   "board_issue": 1,
   "sightings": [
     {
       "n": 9,
-      "title": "🐺 Wolfy said \"update\" — Nocturne Android emulator",
+      "title": "\ud83d\udc3a Wolfy said \"update\" \u2014 Nocturne Android emulator",
       "who": "CommunityPoke",
       "at": "2026-09-23T16:31:16Z",
       "count": 1,
@@ -13,7 +13,7 @@
     },
     {
       "n": 6,
-      "title": "🐺 Wolfy broke poke",
+      "title": "\ud83d\udc3a Wolfy broke poke",
       "who": "vili-pet",
       "at": "2026-09-23T16:03:56Z",
       "count": 20,
@@ -40,7 +40,7 @@
     },
     {
       "n": 5,
-      "title": "🐺 Wolfy said \"update\"",
+      "title": "\ud83d\udc3a Wolfy said \"update\"",
       "who": "vili-pet",
       "at": "2026-09-23T15:34:20Z",
       "count": 3,
@@ -49,11 +49,11 @@
     },
     {
       "n": 2,
-      "title": "🐺 Wolfy said \"update\" (house sighting #0)",
+      "title": "\ud83d\udc3a Wolfy said \"update\" (house sighting #0)",
       "who": "CommunityPoke",
       "at": "2026-09-23T15:24:36Z",
       "count": 1,
-      "quote": "let me just update the tracker real quick\" — famous last words",
+      "quote": "let me just update the tracker real quick\" \u2014 famous last words",
       "src": "issue"
     }
   ],
@@ -74,10 +74,25 @@
     }
   ],
   "odds": {
-    "3.5": {"over": 0, "under": 0},
-    "7.5": {"over": 0, "under": 0},
-    "13.5": {"over": 0, "under": 0},
-    "21.5": {"over": 0, "under": 0},
-    "42.5": {"over": 0, "under": 0}
+    "3.5": {
+      "over": 0,
+      "under": 0
+    },
+    "7.5": {
+      "over": 0,
+      "under": 0
+    },
+    "13.5": {
+      "over": 0,
+      "under": 0
+    },
+    "21.5": {
+      "over": 0,
+      "under": 0
+    },
+    "42.5": {
+      "over": 0,
+      "under": 0
+    }
   }
 }
