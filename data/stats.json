@@ -8,11 +8,11 @@
       "bridge-test": 1
     }
   },
-  "total_updates": 31,
-  "updated_at": "2026-09-23T19:13:21.315743+00:00",
-  "issue_sightings": 6,
-  "issue_updates": 27,
+  "total_updates": 36,
+  "updated_at": "2026-09-23T19:15:19.943602+00:00",
+  "issue_sightings": 7,
+  "issue_updates": 32,
   "webhook_updates": 4,
   "webhook_sightings": 2,
-  "last_sighting_at": "2026-09-23T17:30:05Z"
+  "last_sighting_at": "2026-09-23T19:15:10Z"
 }

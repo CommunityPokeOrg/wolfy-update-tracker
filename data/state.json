@@ -1,7 +1,16 @@
 {
-  "generated_at": "2026-09-23T19:13:21.315266+00:00",
+  "generated_at": "2026-09-23T19:15:19.943154+00:00",
   "board_issue": 1,
   "sightings": [
+    {
+      "n": 12,
+      "title": "\ud83d\udc3a Wolfy said \"update\"",
+      "who": "vili-pet",
+      "at": "2026-09-23T19:15:10Z",
+      "count": 5,
+      "quote": "Wolfy \u2014 22.06\nUpdates on nocturne\ncommunity poke!\nAPPI\n \u2014 22.06\nchecking on devin now\nsession finished. offline full-firmware emulator is implemented and verified end-to-end on an AVD, all 254 daemon tests passed alongside clippy and fmt checks\nPR is open on the fork:\nnote: no CI triggered on the PR since Actions look disabled on the fork\n\ud83d\udd17 https://view-link.cx/Y35TfKQNzld\nGitHub\n[feat: offline full-firmware Android emulator (daemon emulator mode ...](https://view-link.cx/Y35TfKQNzld)\nSummary\nAdds an offline, full-firmware emulator for the Nocturne Car Thing UX: a new packages/android Kotlin app runs the real nocturned daemon in a new NOCTURNE_EMULATOR mode (real WS/HTTP servers...\nfeat: offline full-firmware Android emulator (daemon emulator mode ...\nWolfy \u2014 22.07\nMerge it\ncommunity poke!\nAPPI\n \u2014 22.07\non it\nmerged into main\nmerge commit: 419f65f1f9395530c59dc86c505d99d565f5eeb4\nWolfy \u2014 22.07\nNow create Apk\ncommunity poke!\nAPPI\n \u2014 22.07\non it, spinning devin up to build the apk\ndevin started building the apk from main now, i'll let you know once the build finishes and the artifact is ready\nWolfy \u2014 22.10\nUpdates\ncommunity poke!\nAPPI\n \u2014 22.10\nsiren sounded, checking the apk build now\nstill working. devin is inspecting the android package and workflows rn, had a failed blueprint during env setup so it's sorting out dependencies. no artifact yet\nWolfy \u2014 22.10\nSTOP THAT \ud83d\udc7f\ncommunity poke!\nAPPI\n \u2014 22.10\nmy bad bro, no more sirens \ud83e\udd10\nWolfy \u2014 22.13\nUpdate\ncommunity poke!\nAPPI\n \u2014 22.13\nlooking now\nstill chugging along in the background. still working through the env setup and inspecting the android build workflows after that blueprint hiccup, no new output or artifact yet",
+      "src": "issue"
+    },
     {
       "n": 11,
       "title": "\ud83d\udc3a Wolfy said \"update\"",
