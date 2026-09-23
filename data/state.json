@@ -1,0 +1,52 @@
+{
+  "generated_at": "2026-09-23T15:29:16.331490+00:00",
+  "board_issue": 1,
+  "sightings": [
+    {
+      "n": 2,
+      "title": "\ud83d\udc3a Wolfy said \"update\" (house sighting #0)",
+      "who": "CommunityPoke",
+      "at": "2026-09-23T15:24:36Z",
+      "count": 1,
+      "quote": "let me just update the tracker real quick\" \u2014 famous last words"
+    }
+  ],
+  "omens": [
+    {
+      "n": 4,
+      "mod": "Mia",
+      "text": "\"Wolfy is one update away from a one-way ticket to ban-vuori.\"",
+      "menace": 3,
+      "at": "2026-09-23T15:24:37Z"
+    },
+    {
+      "n": 3,
+      "mod": "Mia",
+      "text": "\"say Updates one more time, Wolfy. I dare you. I double dare you.\"",
+      "menace": 4,
+      "at": "2026-09-23T15:24:37Z"
+    }
+  ],
+  "odds": {
+    "3.5": {
+      "over": 0,
+      "under": 0
+    },
+    "7.5": {
+      "over": 0,
+      "under": 0
+    },
+    "13.5": {
+      "over": 0,
+      "under": 0
+    },
+    "21.5": {
+      "over": 0,
+      "under": 0
+    },
+    "42.5": {
+      "over": 0,
+      "under": 0
+    }
+  }
+}

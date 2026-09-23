@@ -1,0 +1,31 @@
+name: Refresh tracker state
+
+on:
+  issues:
+    types: [opened, edited, closed, reopened, labeled, unlabeled, deleted]
+  issue_comment:
+    types: [created, edited, deleted]
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build state.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 tools/build_state.py
+      - name: Commit state
+        run: |
+          git config user.name "wolfy-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data/state.json
+          git diff --cached --quiet || git commit -m "state: refresh tracker snapshot"
+          git push

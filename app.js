@@ -83,11 +83,21 @@ $("endTime").textContent = fmtTZ(END) + " UTC+7";
 setInterval(tick, 1000);
 tick();
 
+/* ---------- fallback snapshot (built by GitHub Actions) ---------- */
+// When the visitor's IP is out of anonymous GitHub API quota, use the
+// repo-hosted snapshot instead — always available since it's on Pages.
+async function fetchState() {
+  const res = await fetch("data/state.json", { cache: "no-store" });
+  if (!res.ok) throw new Error("no snapshot");
+  return res.json();
+}
+
 /* ---------- sightings ---------- */
 let lastCount = -1;
 let sightings = [];
 
 async function loadSightings() {
+  let source = "live";
   try {
     const issues = await gh(
       `${API}/issues?labels=sighting&state=all&per_page=100&sort=created&direction=desc`);
@@ -99,13 +109,24 @@ async function loadSightings() {
       count: firstInt(fieldValue(i.body, "How many"), 1),
       quote: fieldValue(i.body, "What did Wolfy say").replace(/^"|"$/g, ""),
     }));
-    renderSightings();
-    $("feedStatus").textContent =
-      `last refreshed ${new Date().toLocaleTimeString()} · ${sightings.length} sightings on record`;
   } catch (e) {
-    $("feedStatus").textContent =
-      `refresh hiccup (${e.message}) — the wolf endures; retrying soon`;
+    try {
+      const st = await fetchState();
+      sightings = st.sightings.map((s) => ({ ...s, at: new Date(s.at) }))
+        .sort((a, b) => b.at - a.at);
+      source = "snapshot";
+    } catch { /* leave old data */ }
   }
+  if (!sightings.length && source !== "snapshot") {
+    $("feedStatus").textContent = "no sightings yet — the wolf is quiet, too quiet";
+    renderSightings();
+    return;
+  }
+  renderSightings();
+  const stamp = new Date().toLocaleTimeString();
+  $("feedStatus").textContent = source === "snapshot"
+    ? `showing bot snapshot · ${sightings.length} sightings on record`
+    : `last refreshed ${stamp} · ${sightings.length} sightings on record`;
 }
 
 function renderSightings() {
@@ -196,25 +217,36 @@ async function loadOdds() {
     if (!board) { $("oddsStatus").textContent = "odds board missing — house is renovating"; return; }
     $("oddsLink").href = board.html_url;
     const comments = await gh(`${API}/issues/${board.number}/comments?per_page=100`);
-    renderOdds(comments);
+    const byLine = new Map();
+    for (const c of comments) {
+      const m = (c.body || "").match(/<!--\s*line:([\d.]+)\s*-->/);
+      if (m) byLine.set(parseFloat(m[1]), {
+        over: (c.reactions && c.reactions["+1"]) || 0,
+        under: (c.reactions && c.reactions["-1"]) || 0,
+      });
+    }
+    renderOdds(byLine);
     $("oddsStatus").textContent = "odds update every minute · 👍/👎 reactions are the bets";
   } catch (e) {
-    $("oddsStatus").textContent = `odds refresh hiccup (${e.message}) — bookie is at the grill`;
+    try {
+      const st = await fetchState();
+      const byLine = new Map(Object.entries(st.odds || {})
+        .map(([k, v]) => [parseFloat(k), v]));
+      renderOdds(byLine);
+      $("oddsStatus").textContent = "showing bot snapshot odds (live API cooling down)";
+    } catch {
+      $("oddsStatus").textContent = `odds refresh hiccup (${e.message}) — bookie is at the grill`;
+    }
   }
 }
 
-function renderOdds(comments) {
+function renderOdds(byLine) {
   const grid = $("oddsGrid");
-  const byLine = new Map();
-  for (const c of comments) {
-    const m = (c.body || "").match(/<!--\s*line:([\d.]+)\s*-->/);
-    if (m) byLine.set(parseFloat(m[1]), c);
-  }
   let hottest = -1, hotVol = -1;
   const cards = CONFIG.lines.map((line, i) => {
     const c = byLine.get(line);
-    const over = c ? (c.reactions["+1"] || 0) : 0;
-    const under = c ? (c.reactions["-1"] || 0) : 0;
+    const over = c ? c.over : 0;
+    const under = c ? c.under : 0;
     const sum = over + under;
     if (sum > hotVol) { hotVol = sum; hottest = i; }
     const op = sum ? Math.round((over / sum) * 100) : 50;
@@ -244,9 +276,9 @@ function banVerdict(mult, dist, n) {
 const VOL_LABELS = ["Flat", "Twitchy", "Spicy", "Chaotic", "Mia-tier"];
 
 async function loadBanRisk() {
+  const cutoff = Date.now() - CONFIG.banWindowHours * HOUR;
   try {
     const issues = await gh(`${API}/issues?labels=mod-omen&state=all&per_page=100`);
-    const cutoff = Date.now() - CONFIG.banWindowHours * HOUR;
     const omens = issues.filter((i) => !i.pull_request && new Date(i.created_at) >= cutoff)
       .map((i) => ({
         n: i.number,
@@ -257,7 +289,16 @@ async function loadBanRisk() {
       })).sort((a, b) => b.at - a.at);
     renderBanRisk(omens);
   } catch (e) {
-    $("banVerdict").textContent = `omen feed unreachable (${e.message}) — assuming the worst`;
+    try {
+      const st = await fetchState();
+      const omens = (st.omens || [])
+        .map((o) => ({ ...o, at: new Date(o.at) }))
+        .filter((o) => o.at >= cutoff)
+        .sort((a, b) => b.at - a.at);
+      renderBanRisk(omens);
+    } catch {
+      $("banVerdict").textContent = `omen feed unreachable (${e.message}) — assuming the worst`;
+    }
   }
 }
 
