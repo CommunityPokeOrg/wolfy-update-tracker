@@ -18,12 +18,17 @@ def field(body, label):
     return m.group(1).strip() if m else ""
 
 def first_int(text, fallback):
-    m = re.search(r"\d+", text or "")
+    m = re.search(r"-?\d+", text or "")
     return int(m.group()) if m else fallback
 
 def issues_by_label(label):
-    return [i for i in get(f"/issues?labels={label}&state=all&per_page=100")
-            if "pull_request" not in i]
+    issues = [i for i in get(f"/issues?labels={label}&state=all&per_page=100")
+              if "pull_request" not in i]
+    # Closed with not_planned means an invalid/rejected sighting. Keep other
+    # closed issues in historical totals, but never re-count rejected reports
+    # when issue close/edit events trigger a fresh snapshot.
+    return [i for i in issues
+            if not (i.get("state") == "closed" and i.get("state_reason") == "not_planned")]
 
 def load_json(path, default):
     try:
