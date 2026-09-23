@@ -1,7 +1,16 @@
 {
-  "generated_at": "2026-09-23T15:44:23.533144+00:00",
+  "generated_at": "2026-09-23T15:45:05.696981+00:00",
   "board_issue": 1,
   "sightings": [
+    {
+      "n": "wh-1",
+      "title": "update time, said Wolfy, updatingly",
+      "who": "Wolfy",
+      "at": "2026-09-23T15:50:00+00:00",
+      "count": 1,
+      "quote": "update time, said Wolfy, updatingly",
+      "src": "bridge-test"
+    },
     {
       "n": "wh-0",
       "title": "update update update, he said it thrice",
