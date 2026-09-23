@@ -1,7 +1,16 @@
 {
-  "generated_at": "2026-09-23T16:09:58.058440+00:00",
+  "generated_at": "2026-09-23T16:10:46.442905+00:00",
   "board_issue": 1,
   "sightings": [
+    {
+      "n": 7,
+      "title": "\ud83d\udc3a Wolfy said \"update\"",
+      "who": "WolfyBlair",
+      "at": "2026-09-23T16:10:36Z",
+      "count": 123734234,
+      "quote": "Updates while it's on outage",
+      "src": "issue"
+    },
     {
       "n": 6,
       "title": "\ud83d\udc3a Wolfy broke poke",
