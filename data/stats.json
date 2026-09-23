@@ -1,0 +1,17 @@
+{
+  "webhook": {
+    "events": 1,
+    "updates": 3,
+    "last_sighting_at": "2026-09-23T15:35:00+00:00",
+    "by_source": {
+      "discord": 3
+    }
+  },
+  "total_updates": 7,
+  "updated_at": "2026-09-23T15:44:23.533570+00:00",
+  "issue_sightings": 2,
+  "issue_updates": 4,
+  "webhook_updates": 3,
+  "webhook_sightings": 1,
+  "last_sighting_at": "2026-09-23T15:35:00+00:00"
+}

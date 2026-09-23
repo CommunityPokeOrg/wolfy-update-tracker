@@ -1,0 +1,46 @@
+name: Record sighting (webhook)
+
+# Fired by scripts/dispatch_sighting.py (or any authorized caller) via:
+#   POST /repos/{owner}/{repo}/dispatches
+#   {"event_type": "wolfy_sighting", "client_payload": {...}}
+on:
+  repository_dispatch:
+    types: [wolfy_sighting]
+
+permissions:
+  contents: write
+
+# Serialize so two near-simultaneous dispatches can't race on the data files.
+concurrency:
+  group: record-sighting
+  cancel-in-progress: false
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate payload and append sighting
+        # Reads client_payload from GITHUB_EVENT_PATH; fails loudly on bad input.
+        run: python3 scripts/record_sighting.py
+
+      - name: Rebuild public snapshot + stats
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 tools/build_state.py
+
+      # NOTE: intentionally NOT "[skip ci]" — the commit must trigger the
+      # Pages build so data/*.json goes live on the dashboard (~1 min).
+      - name: Commit data files
+        run: |
+          git config user.name "wolfy-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data/sightings.json data/stats.json data/state.json
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+            exit 0
+          fi
+          git commit -m "sighting: webhook update from ${{ github.event.client_payload.source || 'unknown' }}"
+          git pull --rebase
+          git push

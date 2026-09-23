@@ -25,13 +25,35 @@ def issues_by_label(label):
     return [i for i in get(f"/issues?labels={label}&state=all&per_page=100")
             if "pull_request" not in i]
 
-sightings = [{
+def load_json(path, default):
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return default
+
+issue_sightings = [{
     "n": i["number"], "title": i["title"],
     "who": (i.get("user") or {}).get("login", "anonymous"),
     "at": i["created_at"],
     "count": first_int(field(i.get("body"), "How many"), 1),
     "quote": field(i.get("body"), "What did Wolfy say").strip('"'),
+    "src": "issue",
 } for i in issues_by_label("sighting")]
+
+# Webhook sightings recorded via repository_dispatch (data/sightings.json).
+webhook_sightings = [{
+    "n": f"wh-{idx}", "title": s.get("message", ""),
+    "who": s.get("author_name", "anonymous"),
+    "at": s.get("timestamp"),
+    "count": int(s.get("count", 1)),
+    "quote": s.get("message", ""),
+    "src": s.get("source", "webhook"),
+} for idx, s in enumerate(load_json("data/sightings.json", []))
+   if isinstance(s, dict)]
+
+sightings = sorted(issue_sightings + webhook_sightings,
+                   key=lambda s: s["at"] or "", reverse=True)
 
 omens = [{
     "n": i["number"],
@@ -56,6 +78,10 @@ else:
     state_board = None
 
 from datetime import datetime, timezone
+issue_updates = sum(s["count"] for s in issue_sightings)
+webhook_updates = sum(s["count"] for s in webhook_sightings)
+last_at = max((s["at"] for s in sightings if s["at"]), default=None)
+
 state = {
     "generated_at": datetime.now(timezone.utc).isoformat(),
     "board_issue": state_board,
@@ -66,4 +92,18 @@ state = {
 os.makedirs("data", exist_ok=True)
 with open("data/state.json", "w") as f:
     json.dump(state, f, indent=2)
-print(f"state: {len(sightings)} sightings, {len(omens)} omens, {len(odds)} lines")
+
+# stats.json: issue-side counters are owned by this script; webhook_* fields
+# are owned by scripts/record_sighting.py (preserve whatever is there).
+stats = load_json("data/stats.json", {})
+stats["issue_sightings"] = len(issue_sightings)
+stats["issue_updates"] = issue_updates
+stats["webhook_updates"] = webhook_updates
+stats["webhook_sightings"] = len(webhook_sightings)
+stats["total_updates"] = issue_updates + webhook_updates
+stats["last_sighting_at"] = last_at
+stats["updated_at"] = datetime.now(timezone.utc).isoformat()
+with open("data/stats.json", "w") as f:
+    json.dump(stats, f, indent=2)
+print(f"state: {len(sightings)} sightings, {len(omens)} omens, {len(odds)} lines; "
+      f"stats: {stats['total_updates']} total updates")

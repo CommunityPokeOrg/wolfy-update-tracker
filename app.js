@@ -109,7 +109,23 @@ async function loadSightings() {
       at: new Date(i.created_at),
       count: firstInt(fieldValue(i.body, "How many"), 1),
       quote: fieldValue(i.body, "What did Wolfy say").replace(/^"|"$/g, ""),
+      src: "issue",
     }));
+    // Webhook sightings recorded via repository_dispatch land in
+    // data/sightings.json (deployed with the site) — merge them in.
+    try {
+      const res = await fetch("data/sightings.json", { cache: "no-store" });
+      if (res.ok) {
+        const extra = (await res.json()).filter((s) => s && s.timestamp)
+          .map((s, idx) => ({
+            n: `wh-${idx}`, title: s.message, who: s.author_name || "anonymous",
+            at: new Date(s.timestamp), count: s.count || 1,
+            quote: s.message, src: s.source || "webhook",
+          }));
+        sightings = sightings.concat(extra)
+          .sort((a, b) => b.at - a.at);
+      }
+    } catch { /* no webhook log yet */ }
   } catch (e) {
     try {
       const st = await fetchState();
@@ -187,8 +203,9 @@ function renderKuitti(total) {
       const desc = s.quote
         ? `&quot;${esc(s.quote).slice(0, 60)}&quot;`
         : esc(s.title.replace(/^🐺\s*/, "").slice(0, 44));
+      const tag = s.src && s.src !== "issue" ? `[${esc(s.src)}] ` : "";
       return `<div class="kuitti-item" title="#${s.n} by ${esc(s.who)}">
-        <span class="desc">${fmtTZ(s.at)} ${desc}</span>
+        <span class="desc">${fmtTZ(s.at)} ${tag}${desc}</span>
         <span class="qty">${s.count}× upd</span>
       </div>`;
     }).join("");
