@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wolfy Update Tracker 🐺</title>
+<meta name="description" content="How many times will Wolfy say 'update' in 24 hours? Live community tally, over/under odds board, and a purely hypothetical Ban Risk Multiplier.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐺</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+
+<header class="site-header">
+  <div class="brand">
+    <span class="wolf">🐺</span>
+    <div>
+      <h1>WOLFY UPDATE TRACKER</h1>
+      <p class="tagline">Seuraamme sanaa <em>“update”</em>, jotta sinun ei tarvitsisi.</p>
+    </div>
+  </div>
+  <div class="clock-chip" title="Official tracking timezone">
+    <span class="clock-label">UTC+7</span>
+    <span id="localClock" class="clock-time">--:--:--</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- ===================== BIG TICKER + COUNTDOWN ===================== -->
+  <section class="hero">
+    <div class="ticker-panel">
+      <div class="ticker-label">UPDATES UTTERED</div>
+      <div id="tickerCount" class="ticker-count">0</div>
+      <div id="paceLine" class="pace-line">Waiting for the first “update”…</div>
+      <a id="reportBtn" class="btn btn-primary" href="#" target="_blank" rel="noopener">
+        🐺 Raportoi havainto — Wolfy said it!
+      </a>
+    </div>
+
+    <div class="countdown-panel">
+      <div class="ticker-label">COUNTDOWN · 24H IN UTC+7</div>
+      <div id="countdown" class="countdown">--:--:--</div>
+      <div class="progress"><div id="progressBar" class="progress-fill"></div></div>
+      <div class="window-times">
+        <span>🟢 <span id="startTime">…</span></span>
+        <span>🔴 <span id="endTime">…</span></span>
+      </div>
+      <canvas id="sparkline" height="64"></canvas>
+      <div class="spark-caption">updates per hour</div>
+    </div>
+  </section>
+
+  <!-- ===================== ODDS BOARD ===================== -->
+  <section class="board">
+    <h2>🎲 OVER / UNDER — The Odds Board</h2>
+    <p class="board-sub">
+      Place your bets with GitHub reactions on the
+      <a id="oddsLink" href="#" target="_blank" rel="noopener">official odds board issue</a>:
+      👍 = OVER, 👎 = UNDER. Winnings paid in grillikuittis and glory.
+    </p>
+    <div id="oddsGrid" class="odds-grid"></div>
+    <p id="oddsStatus" class="status-line"></p>
+  </section>
+
+  <!-- ===================== BAN RISK MULTIPLIER ===================== -->
+  <section class="banrisk">
+    <h2>⚠️ BAN RISK MULTIPLIER™</h2>
+    <p class="board-sub">
+      Community-reported admin/mod messages from the last 48 hours — warning jokes,
+      ban jokes, Mia joking about the word “Updates” — fed into an entirely
+      hypothetical risk model. Report omens via the
+      <a id="omenBtn" href="#" target="_blank" rel="noopener">mod-omen form</a>.
+    </p>
+
+    <div class="banrisk-grid">
+      <div class="ban-card main-gauge">
+        <div class="ticker-label">CURRENT MULTIPLIER</div>
+        <div id="banMultiplier" class="ban-mult">×1.00</div>
+        <div id="banVerdict" class="ban-verdict">All quiet. Suspiciously quiet.</div>
+        <div class="gauge">
+          <div id="strikeFill" class="gauge-fill"></div>
+          <div class="gauge-marker">🚫 notional mod strike</div>
+        </div>
+      </div>
+
+      <div class="ban-card">
+        <div class="ticker-label">VOLATILITY</div>
+        <div id="volLabel" class="vol-label">—</div>
+        <div class="vol-meter"><div id="volFill" class="vol-fill"></div></div>
+        <p id="volNote" class="small-note"></p>
+      </div>
+
+      <div class="ban-card">
+        <div class="ticker-label">RECENT OMENS (48H)</div>
+        <ul id="omenList" class="omen-list"></ul>
+      </div>
+    </div>
+
+    <details class="assumptions">
+      <summary>📋 Data inputs &amp; assumptions (read before panicking)</summary>
+      <ul>
+        <li><b>Input:</b> GitHub issues labeled <code>mod-omen</code>, reported by the community, from the last 48 hours.</li>
+        <li><b>Severity:</b> each report carries a self-assessed menace level 1–5 (from “hakuna matata” to “Wolfy is cooked”).</li>
+        <li><b>Decay:</b> omens lose half their weight every 18 hours — moderators have short memories, allegedly.</li>
+        <li><b>Score:</b> multiplier = 1 + Σ(menace × decay) / 5. “Distance to strike” = raw points / 12.</li>
+        <li><b>Volatility:</b> standard deviation of menace levels; high volatility = the mods are unpredictable, which is worse.</li>
+        <li><b>Disclaimer:</b> this is a joke metric computed from joke reports. It is <i>not</i> a real moderation decision, prediction, or statement by any actual moderator. Wolfy's fate remains in Wolfy's hands.</li>
+      </ul>
+    </details>
+  </section>
+
+  <!-- ===================== SIGHTING FEED (GRILLIKUITTI) ===================== -->
+  <section class="feed">
+    <h2>🧾 GRILLIKUITTI — Sighting Receipts</h2>
+    <p class="board-sub">Every confirmed “update” is printed on the official grill receipt. Sis. ALV 14% päivityksiä.</p>
+    <div id="kuitti" class="kuitti">
+      <div class="kuitti-head">
+        <pre>
+GRILLIKIOSKI WOLFY OY
+K-Rauta-osasto · kassalle 3
+------------------------------
+PÄIVITYSKUITTI / UPDATE RECEIPT
+------------------------------
+        </pre>
+      </div>
+      <div id="kuittiItems" class="kuitti-items"></div>
+      <div class="kuitti-foot">
+        <pre id="kuittiTotal">------------------------------
+YHTEENSÄ / TOTAL:    0 update
+KIITOS JA AUKI HUOMISEEN
+Tervetuloa K-Rautaan!
+------------------------------</pre>
+      </div>
+    </div>
+    <p id="feedStatus" class="status-line"></p>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="marquee"><div class="marquee-inner" id="loreMarquee"></div></div>
+  <p class="foot-note">
+    Community project · Data lives as GitHub issues &amp; reactions ·
+    <a id="repoLink" href="#" target="_blank" rel="noopener">source on GitHub</a> ·
+    Ban Risk Multiplier™ is 100% hypothetical and 0% legally binding.
+  </p>
+</footer>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+name: "🐺 Report an \"update\" sighting"
+description: Wolfy said the word. Log it for the ticker.
+title: "🐺 Wolfy said \"update\""
+labels: ["sighting"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Havaintohaste!
+        One issue = one sighting. If Wolfy rattled off multiple "update"s in a single
+        burst, put the total in the count field below. The tracker reads this issue
+        and prints it on the official grillikuitti.
+  - type: input
+    id: count
+    attributes:
+      label: 'How many times did Wolfy say "update" in this sighting?'
+      description: A single number. Burst-utterances count in full.
+      placeholder: "1"
+      value: "1"
+    validations:
+      required: true
+  - type: textarea
+    id: quote
+    attributes:
+      label: What did Wolfy say? (verbatim, please)
+      description: The sacred sentence(s), for the receipt.
+      placeholder: "update the bot, update the wiki, update everything"
+    validations:
+      required: false
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did it happen?
+      options:
+        - Discord text channel
+        - Voice chat (we heard it)
+        - Grill queue at 2AM
+        - K-Rauta parking lot
+        - In a dream
+        - Other astral plane
+    validations:
+      required: false
+  - type: checkboxes
+    id: oath
+    attributes:
+      label: Sworn statement
+      options:
+        - label: I swear on a warm grillimakkara that Wolfy really said it.
+          required: true

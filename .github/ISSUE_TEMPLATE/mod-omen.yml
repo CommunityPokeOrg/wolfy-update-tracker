@@ -1,0 +1,41 @@
+name: "⚠️ Report a mod omen"
+description: An admin/moderator made a warning or ban joke about the updates.
+title: "⚠️ Mod omen detected"
+labels: ["mod-omen"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Omen protocol
+        Reported admin/mod messages feed the **Ban Risk Multiplier™** —
+        a 100% hypothetical, 0% official metric. Only report *jokes and banter*;
+        real moderation discussions stay private, always.
+  - type: input
+    id: mod
+    attributes:
+      label: Which mod/admin?
+      description: First name or nickname is fine.
+      placeholder: "Mia"
+    validations:
+      required: true
+  - type: textarea
+    id: omen
+    attributes:
+      label: What did they say?
+      description: Paraphrase the warning/ban joke.
+      placeholder: '"say Updates one more time, Wolfy. I dare you."'
+    validations:
+      required: true
+  - type: dropdown
+    id: menace
+    attributes:
+      label: Menace level
+      description: Your honest assessment of how cooked Wolfy is.
+      options:
+        - "1 — hakuna matata (no worries)"
+        - "2 — eyebrow was raised"
+        - "3 — spicy warnings issued"
+        - "4 — typing... then silence"
+        - "5 — Wolfy is cooked"
+    validations:
+      required: true
