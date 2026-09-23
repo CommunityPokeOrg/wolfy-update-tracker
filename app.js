@@ -33,6 +33,7 @@ const newIssueBase = `https://github.com/${CONFIG.repoOwner}/${CONFIG.repoName}/
 $("reportBtn").href = `${newIssueBase}?template=sighting.yml`;
 $("omenBtn").href = `${newIssueBase}?template=mod-omen.yml`;
 $("repoLink").href = CONFIG.repoUrl;
+$("oddsLink").href = `${CONFIG.repoUrl}/issues?q=label%3Aodds`;
 
 /* ---------- parsing helpers ---------- */
 // Issue-form bodies render as "### Label\n\nvalue\n\n### Next label..."
@@ -230,6 +231,8 @@ async function loadOdds() {
   } catch (e) {
     try {
       const st = await fetchState();
+      if (st.board_issue)
+        $("oddsLink").href = `${CONFIG.repoUrl}/issues/${st.board_issue}`;
       const byLine = new Map(Object.entries(st.odds || {})
         .map(([k, v]) => [parseFloat(k), v]));
       renderOdds(byLine);
