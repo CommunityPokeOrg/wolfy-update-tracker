@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """Snapshot tracker state to data/state.json (fallback feed when the
 visitor's IP is GitHub-API-rate-limited). Runs in GitHub Actions with GITHUB_TOKEN."""
-import json, os, re, urllib.request
+import json, os, re, sys, urllib.request
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import tracker_text
 
 OWNER, REPO = "CommunityPokeOrg", "wolfy-update-tracker"
 API = f"https://api.github.com/repos/{OWNER}/{REPO}"
 TOKEN = os.environ["GITHUB_TOKEN"]
+KEYWORDS = tracker_text.load_keywords()
 
 def get(path):
     req = urllib.request.Request(API + path, headers={
@@ -37,11 +41,19 @@ def load_json(path, default):
     except (FileNotFoundError, json.JSONDecodeError):
         return default
 
+def sighting_count(body):
+    """Updates contributed by a sighting issue: the reporter's count, raised
+    to the number of tracked phrases in the Wolfy-attributed part of the
+    quote (a quote can only ever raise the count, never lower it)."""
+    reported = max(0, first_int(field(body, "How many"), 0) or 0)
+    quote = field(body, "What did Wolfy say").strip('"')
+    return max(1, reported, tracker_text.occurrences(tracker_text.wolfy_text(quote), KEYWORDS))
+
 issue_sightings = [{
     "n": i["number"], "title": i["title"],
     "who": (i.get("user") or {}).get("login", "anonymous"),
     "at": i["created_at"],
-    "count": first_int(field(i.get("body"), "How many"), 1),
+    "count": sighting_count(i.get("body")),
     "quote": field(i.get("body"), "What did Wolfy say").strip('"'),
     "src": "issue",
 } for i in issues_by_label("sighting")]
@@ -51,7 +63,8 @@ webhook_sightings = [{
     "n": f"wh-{idx}", "title": s.get("message", ""),
     "who": s.get("author_name", "anonymous"),
     "at": s.get("timestamp"),
-    "count": int(s.get("count", 1)),
+    "count": max(1, int(s.get("count", 0) or 0),
+                 tracker_text.occurrences(s.get("message", ""), KEYWORDS)),
     "quote": s.get("message", ""),
     "src": s.get("source", "webhook"),
 } for idx, s in enumerate(load_json("data/sightings.json", []))

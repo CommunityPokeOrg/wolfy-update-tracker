@@ -51,6 +51,49 @@ function esc(s) {
   return (s || "").replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
+
+/* ---------- tracked phrases (keywords.json is the source of truth) ---------- */
+// Fallback mirror of ../keywords.json if the file can't be fetched.
+const DEFAULT_KEYWORDS = ["update", "updates", "proceed", "any progress", "build new apk please"];
+let KEYWORDS = DEFAULT_KEYWORDS;
+const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const kwRe = (kw) => new RegExp(
+  "\\b" + kw.trim().split(/\s+/).map(escRe).join("\\s+") + "\\b", "gi");
+// Case-insensitive occurrences of all tracked phrases in text.
+function phraseOccurrences(text) {
+  const t = text || "";
+  return KEYWORDS.reduce((n, kw) => n + ((t.match(kwRe(kw)) || []).length), 0);
+}
+// Speaker attribution: transcript lines/blocks attributed to another speaker
+// don't count as Wolfy utterances (Discord paste "Name — HH.MM" blocks,
+// inline "Name: msg" prefixes). Unattributed text counts — the sighting form
+// asks for Wolfy's verbatim words.
+const SPEAKER_HDR = /^[ \t]*([A-Za-z0-9_.\- ]{1,30}?)[ \t]*\u2014[ \t]*\d{1,2}[:.]\d{2}(?::\d{2})?[ \t]*(?:[ap]m)?[ \t]*$/gim;
+const NAME_PREFIX = /^[ \t]*([A-Za-z][A-Za-z0-9_.\-]{0,29}):/;
+const isWolfy = (n) => /wolfy/i.test(n || "");
+function wolfyText(quote) {
+  const t = quote || "";
+  let keep = "", pos = 0, cur = true, m;
+  SPEAKER_HDR.lastIndex = 0;
+  while ((m = SPEAKER_HDR.exec(t))) {
+    if (cur) keep += t.slice(pos, m.index);
+    cur = isWolfy(m[1]);
+    pos = m.index + m[0].length;
+  }
+  if (cur) keep += t.slice(pos);
+  return keep.split("\n")
+    .filter((ln) => { const p = ln.match(NAME_PREFIX); return !p || isWolfy(p[1]); })
+    .join("\n");
+}
+async function loadKeywords() {
+  try {
+    const res = await fetch("keywords.json", { cache: "no-store" });
+    if (res.ok) {
+      const kws = (await res.json()).filter((k) => typeof k === "string" && k.trim());
+      if (kws.length) KEYWORDS = kws.map((k) => k.trim());
+    }
+  } catch { /* keep built-in defaults */ }
+}
 const fmtTZ = (d) =>
   new Intl.DateTimeFormat("fi-FI", {
     timeZone: CONFIG.timezone, day: "2-digit", month: "2-digit",
@@ -102,15 +145,24 @@ async function loadSightings() {
   try {
     const issues = await gh(
       `${API}/issues?labels=sighting&state=all&per_page=100&sort=created&direction=desc`);
-    sightings = issues.filter((i) => !i.pull_request).map((i) => ({
-      n: i.number,
-      title: i.title,
-      who: i.user ? i.user.login : "anonymous",
-      at: new Date(i.created_at),
-      count: firstInt(fieldValue(i.body, "How many"), 1),
-      quote: fieldValue(i.body, "What did Wolfy say").replace(/^"|"$/g, ""),
-      src: "issue",
-    }));
+    sightings = issues.filter((i) => !i.pull_request)
+      // Rejected reports (closed as not_planned) never count, same as the
+      // snapshot builder — otherwise troll counts leak into the live total.
+      .filter((i) => !(i.state === "closed" && i.state_reason === "not_planned"))
+      .map((i) => {
+        const reported = Math.max(0, firstInt(fieldValue(i.body, "How many"), 0) || 0);
+        const quote = fieldValue(i.body, "What did Wolfy say").replace(/^"|"$/g, "");
+        return {
+          n: i.number,
+          title: i.title,
+          who: i.user ? i.user.login : "anonymous",
+          at: new Date(i.created_at),
+          // A quote can only raise the reported count, never lower it.
+          count: Math.max(1, reported, phraseOccurrences(wolfyText(quote))),
+          quote,
+          src: "issue",
+        };
+      });
     // Webhook sightings recorded via repository_dispatch land in
     // data/sightings.json (deployed with the site) — merge them in.
     try {
@@ -119,7 +171,8 @@ async function loadSightings() {
         const extra = (await res.json()).filter((s) => s && s.timestamp)
           .map((s, idx) => ({
             n: `wh-${idx}`, title: s.message, who: s.author_name || "anonymous",
-            at: new Date(s.timestamp), count: s.count || 1,
+            at: new Date(s.timestamp),
+            count: Math.max(1, s.count || 0, phraseOccurrences(s.message)),
             quote: s.message, src: s.source || "webhook",
           }));
         sightings = sightings.concat(extra)
@@ -397,6 +450,7 @@ function confetti() {
 }
 
 /* ---------- boot ---------- */
-loadSightings(); setInterval(loadSightings, CONFIG.pollMs);
+loadKeywords().then(loadSightings);
+setInterval(loadSightings, CONFIG.pollMs);
 loadOdds(); setInterval(loadOdds, CONFIG.oddsPollMs);
 loadBanRisk(); setInterval(loadBanRisk, CONFIG.pollMs);

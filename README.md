@@ -24,10 +24,46 @@ Live site: **https://communitypokeorg.github.io/wolfy-update-tracker/**
 All data lives in this repo as GitHub issues and reactions — the site is fully static
 (GitHub Pages) and reads everything through the public GitHub API.
 
+## What counts as an "update"
+
+The tracked phrases live in **[keywords.json](keywords.json)** — one list used by
+the dashboard, the snapshot builder, and the webhook validator. Currently:
+
+| phrase | |
+|---|---|
+| `update`, `updates` | the classic |
+| `proceed` | Wolfy prompting work |
+| `any progress` | Wolfy asking for updates |
+| `build new apk please` | Wolfy demanding artifacts |
+
+Matching is **case-insensitive**, **word-boundary** (so `updated`/`updater`
+don't count), and multi-word phrases tolerate any internal whitespace.
+
+- **Issue sightings:** the updates a sighting contributes is
+  `max(reported count, phrase occurrences in the quote)` — a quote like
+  `"update update update"` counts 3 even if the reporter left the count at 1.
+  If the quote is a pasted chat log, lines/blocks explicitly attributed to
+  someone else (`Name — HH.MM` Discord paste, `Name:` prefixes) are ignored:
+  only Wolfy's lines count. Issues closed as *not planned* never count.
+- **Webhook sightings:** the count is the number of phrase occurrences in the
+  forwarded `message`. Author attribution is asserted by the reporting bot
+  (`author_id`/`author_name`) — forward only Wolfy's own lines.
+- **To add/change phrases:** edit `keywords.json`. The site, `tools/build_state.py`
+  and `scripts/*.py` all read it.
+
+### Where sightings can come from
+
+| source | automatic? | how |
+|---|---|---|
+| GitHub sighting issues | ✅ | Scanned on every refresh (issue events + 10-min schedule). This is the only source the tracker pulls by itself. |
+| Discord / Matrix / IRC / … | ⚠️ needs a bot | The tracker has **no** chat-platform access. Run `scripts/dispatch_sighting.py` (below) and point a bot that sees Wolfy's messages at it — needs `GH_DISPATCH_TOKEN` (PAT) + `WEBHOOK_SECRET` on the bridge host, plus whatever bot token the chat platform requires. |
+
 ## How it works
 
 - `index.html` / `style.css` / `app.js` / `config.js` — static site, no build step.
-- Sightings: issues labeled `sighting`; the count is parsed from the form's count field.
+- `keywords.json` / `tracker_text.py` — the tracked phrases + shared matching rules.
+- Sightings: issues labeled `sighting`; the count is the form's count field,
+  raised to the number of tracked-phrase occurrences in the quote.
 - Odds: reactions on comments of the issue labeled `odds` (`<!-- line:X.X -->` markers).
 - Ban risk: issues labeled `mod-omen` within 48h, menace-weighted with an 18h half-life.
 - Polling uses ETag/conditional requests to stay friendly with rate limits.
@@ -76,14 +112,14 @@ chat bot ──POST──> scripts/dispatch_sighting.py ──> repository_dispa
 | field | type | required | notes |
 |---|---|---|---|
 | `timestamp` | ISO 8601 string | ✅ | when Wolfy said it (`Z` or offset) |
-| `message` | string ≤500 | ✅ | must contain the word `update`; each word-boundary occurrence counts |
+| `message` | string ≤500 | ✅ | Wolfy's message; must contain ≥1 tracked phrase (`keywords.json`), each occurrence counts |
 | `source` | string ≤64 | ✅ | e.g. `discord`, `matrix` |
 | `author_id` | string/int ≤64 | ✅ | stable id from the source platform |
 | `author_name` | string ≤64 | ✅ | display name |
 
 Validation happens twice (bridge → workflow), so bad payloads can't land in the
-data files. The count a sighting contributes = number of `update` occurrences in
-`message` — a message with zero is rejected.
+data files. The count a sighting contributes = number of tracked-phrase
+occurrences in `message` — a message with zero is rejected.
 
 ### Limitations
 

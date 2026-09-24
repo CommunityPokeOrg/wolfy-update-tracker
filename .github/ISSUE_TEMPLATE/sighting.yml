@@ -10,11 +10,17 @@ body:
         One issue = one sighting. If Wolfy rattled off multiple "update"s in a single
         burst, put the total in the count field below. The tracker reads this issue
         and prints it on the official grillikuitti.
+
+        **Tracked phrases** (see `keywords.json`, case-insensitive):
+        `update` · `updates` · `proceed` · `any progress` · `build new apk please`
+        Occurrences of these in your quote are counted automatically — if the
+        quote contains more than your count field, the higher number wins.
+        If you paste a chat log, only Wolfy's own lines are counted.
   - type: input
     id: count
     attributes:
-      label: 'How many times did Wolfy say "update" in this sighting?'
-      description: A single number. Burst-utterances count in full.
+      label: 'How many tracked phrases did Wolfy utter in this sighting?'
+      description: A single number. Burst-utterances count in full. Phrases spotted in the quote below are added automatically if higher.
       placeholder: "1"
       value: "1"
     validations:
@@ -23,7 +29,7 @@ body:
     id: quote
     attributes:
       label: What did Wolfy say? (verbatim, please)
-      description: The sacred sentence(s), for the receipt.
+      description: The sacred sentence(s), for the receipt. Tracked phrases here are counted automatically; pasted chat logs only count Wolfy's lines.
       placeholder: "update the bot, update the wiki, update everything"
     validations:
       required: false

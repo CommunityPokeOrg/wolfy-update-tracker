@@ -33,17 +33,19 @@ import hashlib
 import hmac
 import json
 import os
-import re
 import sys
 import urllib.request
 import urllib.error
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import tracker_text
+
 REPO = os.environ.get("REPO", "CommunityPokeOrg/wolfy-update-tracker")
 DISPATCH_URL = f"https://api.github.com/repos/{REPO}/dispatches"
 EVENT_TYPE = "wolfy_sighting"
-UPDATE_RE = re.compile(r"\bupdate\b", re.IGNORECASE)
+KEYWORDS = tracker_text.load_keywords()
 
 MAX_MESSAGE_LEN = 500
 MAX_FIELD_LEN = 64
@@ -60,8 +62,8 @@ def validate(payload):
             return f"'{key}' must be a non-empty string"
     if len(payload["message"]) > MAX_MESSAGE_LEN:
         return f"'message' exceeds {MAX_MESSAGE_LEN} chars"
-    if not UPDATE_RE.search(payload["message"]):
-        return "message contains no 'update' — not a sighting"
+    if tracker_text.occurrences(payload["message"], KEYWORDS) == 0:
+        return "message contains no tracked phrase (keywords.json) — not a sighting"
     author_id = payload.get("author_id")
     if not isinstance(author_id, (str, int)) or isinstance(author_id, bool):
         return "'author_id' must be a string or integer"

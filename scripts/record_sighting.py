@@ -8,20 +8,24 @@ workflow fails loudly instead of committing garbage.
 
 Payload contract (client_payload):
   timestamp    ISO 8601 string, when Wolfy said it (e.g. "2026-09-23T22:31:00+07:00")
-  message      the message containing "update" (string, 1-500 chars)
+  message      Wolfy's message (string, 1-500 chars)
   source       where it came from, e.g. "discord" (string, 1-64 chars)
   author_id    stable author id from the source platform (string/int, -> str)
   author_name  display name (string, 1-64 chars)
 
-The "update count" contributed by a sighting is the number of word-boundary
-'update' occurrences in `message` (case-insensitive). A payload whose message
-contains zero occurrences is rejected.
+The "update count" contributed by a sighting is the number of tracked-phrase
+occurrences in `message` (keywords.json; case-insensitive, word-boundary).
+A payload whose message contains zero occurrences is rejected. Author
+attribution is asserted by the reporting bot via author_id/author_name —
+forward only Wolfy's own lines.
 """
 import json
 import os
-import re
 import sys
 from datetime import datetime, timezone
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import tracker_text
 
 DATA_DIR = "data"
 SIGHTINGS_FILE = os.path.join(DATA_DIR, "sightings.json")
@@ -29,7 +33,7 @@ STATS_FILE = os.path.join(DATA_DIR, "stats.json")
 
 MAX_MESSAGE_LEN = 500
 MAX_FIELD_LEN = 64
-UPDATE_RE = re.compile(r"\bupdate\b", re.IGNORECASE)
+KEYWORDS = tracker_text.load_keywords()
 
 
 def fail(msg):
@@ -90,9 +94,9 @@ def main():
 
     timestamp = parse_timestamp(payload.get("timestamp"))
 
-    count = len(UPDATE_RE.findall(message))
+    count = tracker_text.occurrences(message, KEYWORDS)
     if count == 0:
-        fail("message contains no 'update' — not a sighting")
+        fail("message contains no tracked phrase (keywords.json) — not a sighting")
 
     sighting = {
         "timestamp": timestamp,
