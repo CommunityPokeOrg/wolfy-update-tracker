@@ -10,9 +10,10 @@ on:
 permissions:
   contents: write
 
-# Serialize so two near-simultaneous dispatches can't race on the data files.
+# Serialize so two near-simultaneous writers (this workflow and
+# refresh-state.yml, which uses the same group) can't race on the data files.
 concurrency:
-  group: record-sighting
+  group: tracker-data-writes
   cancel-in-progress: false
 
 jobs:
